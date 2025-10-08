@@ -1,0 +1,58 @@
+---
+title: "Lab_01"
+author: "Peilu Huang"
+date: "2025-09-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### TODO 1: Using Markdown for Your Resume/CV
+#### Peilu Huang
+###### Education
+* University of Washington,  *Seattle, US*  
+Master of Science in Real Estate  **Sep 2024-Est. Jun 2026**  
+* University of Nottingham Ningbo China,  *Ningbo, China*  
+BSc (Hons) Finance, Accounting and Management  **Sep 2020-Jul 2024**
+
+## TODO 2: R Basic Review Tasks
+The simplest argument of as.Date(): an object to be converted
+```{r echo=FALSE}
+birthday <- as.Date("2001-09-10")
+print(birthday)
+class(birthday)
+```
+Argument of Sys.Date(): Not required
+```{r echo=FALSE}
+today <- Sys.Date()
+print(today)
+dates <- c(birthday,today)
+dates[2]-birthday
+8792/365
+```
+
+Today is  `r (print(today))` it has been `r ((dates[2]-birthday)/365)` years since my birthday.
+
+## TODO 3: Explore Census Demographic Data
+#### King County Household Income
+```{r echo=FALSE}
+library(tidycensus) 
+library(tidyverse)
+census_api_key("96f943fd5b38142362574386830d3c855e82dd28")
+king_income <- get_acs(geography = "tract", 
+            table = "B19001", 
+            state = "53", 
+            county = "033", 
+            year = 2023)
+```
+
+mean `r ( mean(king_income$estimate, na.rm = TRUE))`
+median `r ( median(king_income$estimate, na.rm = TRUE))`
+min `r ( min(king_income$estimate, na.rm = TRUE))`
+max `r ( max(king_income$estimate, na.rm = TRUE))`
+q25 `r ( quantile(king_income$estimate, 0.25, na.rm = TRUE))`
+q75 `r ( quantile(king_income$estimate, 0.75, na.rm = TRUE))`
+
+I'm interested in King County household income data because it shows income equility and household affordability, and through exploratory analysis, I found significant income inequality with a right-skewed distribution—where the mean income is notably higher than the median.
