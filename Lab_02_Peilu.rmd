@@ -1,0 +1,136 @@
+---
+title: "Lab_02"
+author: "Peilu Huang"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## TODO 1: Modifying Dataframes
+
+```{r}
+library('tidyverse')
+library('kingCoData')
+data(kingco_homes)
+
+kingco_homes_bellevue <- kingco_homes %>% 
+  select(pinx, city, land_val, imp_val, sqft, view_lakewash, view_lakesamm) %>% 
+  filter(city == "BELLEVUE") %>% 
+  mutate(total_val = land_val + imp_val) %>%
+  arrange(desc(total_val))
+
+head(kingco_homes_bellevue,10)
+
+stats_all_bellevue <- summarise(kingco_homes_bellevue,
+  avg_total_val = mean(total_val, na.rm = TRUE),
+  var_total_val = var(total_val, na.rm = TRUE)
+)
+
+kingco_homes_bel2lakes <- kingco_homes_bellevue %>% 
+  filter(
+    view_lakewash == 1, 
+    view_lakesamm == 1,)
+
+stats_bel2lakes <- summarise(kingco_homes_bel2lakes,
+  avg_total_val = mean(total_val, na.rm = TRUE),
+  var_total_val = var(total_val, na.rm = TRUE)
+)
+
+difference_avg <- stats_bel2lakes$avg_total_val - stats_all_bellevue$avg_total_val
+difference_var <- stats_bel2lakes$var_total_val - stats_all_bellevue$var_total_val
+
+print(stats_all_bellevue)
+print(stats_bel2lakes)
+print(difference_avg)
+print(difference_var)
+```
+
+## TODO 2: Summarizing and Joining Dataframes
+
+```{r}
+kingco_homes_clean <- kingco_homes %>%
+  distinct() %>%
+  group_by(pinx) %>%
+  slice_max(order_by = land_val + imp_val, n = 1, with_ties = FALSE) %>% 
+  ungroup() 
+
+kingco_homes_clean %>% 
+  filter(city == "SEATTLE") %>% 
+  group_by(condition) %>% 
+  summarise(
+    N = n(), 
+    average_total_values_per_sqft = mean((land_val + imp_val)/sqft), 
+  ) %>% 
+  arrange(desc(average_total_values_per_sqft))
+```
+
+## TODO 3: Sampling for Central Limit Theorem
+
+```{r}
+data("kingco_sales")
+
+bellevue_after2020 <- kingco_sales %>%
+  filter(
+    city == "BELLEVUE",
+    sale_date >= as.Date("2020-01-01")
+  )
+
+hist(
+  bellevue_after2020$sale_price,
+  breaks = 50,
+  main = "Histogram of Bellevue Sale Prices after 2020", 
+  xlab = "Sale Price (USD)"                         
+)
+
+sale_price_mean = mean(bellevue_after2020$sale_price)
+
+set.seed(77)
+sample_means <- replicate(200, 
+  bellevue_after2020 %>%
+    sample_n(10, replace = TRUE) %>% 
+    summarise(avg_price = mean(sale_price)) %>%
+    pull(avg_price)
+)
+
+hist(
+  sample_means,
+  breaks = 50,
+  main = "Sampling Distribution of Mean Sale Price (n = 10)",
+  xlab = "Sample Mean Sale Price (USD)"
+)
+abline(v = sale_price_mean, col = "red", lwd = 2)
+```
+
+The Central Limit Theorem shows that even though individual property values have a skewed distribution, the distribution of sample means from repeated random sampling becomes approximately normal and centers around the true population mean ($1,888,176), allowing us to make reliable statistical inferences from samples.
+
+## TODO 4:Explore More
+
+```{r}
+kingco_homes_brk <- kingco_homes %>%
+  select(pinx, city, land_val, imp_val, sqft, zoning) %>% 
+  filter(
+    city %in% c('BELLEVUE', 'REDMOND', 'KIRKLAND')
+  ) %>% 
+  mutate(
+    total_val = land_val + imp_val,
+    price_category = case_when(
+       total_val < 500000   ~ "Low",
+       total_val < 1000000  ~ "Mid",
+      TRUE                  ~ "High" 
+    ),
+    city_group = recode(
+      city,
+      "BELLEVUE" = "BRK",
+      "REDMOND"  = "BRK",
+      "KIRKLAND" = "BRK"
+    )
+  ) %>% 
+  arrange(desc(sqft))
+
+head(kingco_homes_brk, 10)
+```
+
+## TODO 5: Using GitHub
