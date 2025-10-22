@@ -548,12 +548,14 @@ skim(wa_ormss)
 rest_us_ormss <- ormss %>% filter(GEOID != "WA")
 skim(rest_us_ormss)
 
+dim(ormss)
 ormss_wide_1 <- ormss %>% 
   pivot_wider(
     id_cols = c(GEONAME, MARKET, SERIESID),
     names_from = PERIOD,  
     values_from =VALUE1
   )
+dim(ormss_wide_1)
 head(ormss_wide_1, 3)
 
 ormss_tot_loans <- ormss %>% filter(SERIESID == "TOT_LOANS", MARKET == "All Mortgages")
